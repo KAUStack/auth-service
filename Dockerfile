@@ -1,3 +1,6 @@
+# Dockerfile for local development
+# This includes a full Maven build with GitHub authentication
+# For CI/CD, use Dockerfile.ci which uses pre-built JAR
 # Multi-stage build for optimized image size
 
 # Stage 1: Build
