@@ -1,0 +1,46 @@
+package com.kaustack.auth.service;
+
+import com.kaustack.auth.model.User;
+import com.kaustack.jwt.JwtGenerator;
+import com.kaustack.jwt.TokenType;
+import com.kaustack.jwt.JwtUtils;
+
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class JwtService {
+
+    private final JwtGenerator jwtGenerator;
+    private final JwtUtils jwtUtils;
+
+    public String generateAccessToken(User user) {
+        return jwtGenerator.generateToken(
+                TokenType.ACCESS,
+                user.getId().toString(),
+                user.getName(),
+                user.getEmail(),
+                user.getGender().name());
+    }
+
+    public String generateRefreshToken(User user) {
+        return jwtGenerator.generateToken(
+                TokenType.REFRESH,
+                user.getId().toString(),
+                user.getName(),
+                user.getEmail(),
+                user.getGender().name());
+    }
+
+    public boolean validateRefreshToken(String token) {
+        return jwtUtils.validateToken(token, TokenType.REFRESH);
+    }
+
+    public UUID extractUserId(String token) {
+        return jwtUtils.extractUserId(token);
+    }
+}
