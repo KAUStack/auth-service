@@ -9,8 +9,8 @@ WORKDIR /app
 RUN addgroup -g 1001 -S appgroup && \
     adduser -u 1001 -S appuser -G appgroup
 
-# Copy the pre-built JAR from target/
-COPY target/*.jar app.jar
+# Copy only the final JAR (not .original or other build artifacts)
+COPY target/*-SNAPSHOT.jar app.jar
 
 # Change ownership to non-root user
 RUN chown -R appuser:appgroup /app
