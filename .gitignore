@@ -34,3 +34,6 @@ build/
 
 # Dev
 **/application-dev.properties
+
+# Environment variables (contains secrets)
+.env

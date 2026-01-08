@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GITHUB_USERNAME: ${GITHUB_USERNAME}
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
+    container_name: auth-service
+    environment:
+      # Spring profiles
+      SPRING_PROFILES_ACTIVE: prod
+      
+      # Database configuration (configure to connect to your external database)
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://localhost:5432/auth_db}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-auth_user}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-auth_password}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:-org.postgresql.Driver}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      SPRING_JPA_DATABASE_PLATFORM: ${SPRING_JPA_DATABASE_PLATFORM:-org.hibernate.dialect.PostgreSQLDialect}
+      
+      # JWT configuration
+      JWT_ACCESS_TOKEN_PRIVATE_KEY: ${JWT_ACCESS_TOKEN_PRIVATE_KEY}
+      JWT_ACCESS_TOKEN_PUBLIC_KEY: ${JWT_ACCESS_TOKEN_PUBLIC_KEY}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-300000}
+      JWT_REFRESH_TOKEN_PRIVATE_KEY: ${JWT_REFRESH_TOKEN_PRIVATE_KEY}
+      JWT_REFRESH_TOKEN_PUBLIC_KEY: ${JWT_REFRESH_TOKEN_PUBLIC_KEY}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-604800000}
+      JWT_ISSUER: ${JWT_ISSUER:-kaugroups}
+      
+      # OAuth2 configuration
+      APP_OAUTH2_REDIRECT_URI: ${APP_OAUTH2_REDIRECT_URI:-http://localhost:3000/oauth2/redirect}
+      APP_OAUTH2_HOSTED_DOMAIN: ${APP_OAUTH2_HOSTED_DOMAIN:-}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_SCOPE: profile,email
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
