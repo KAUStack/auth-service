@@ -32,13 +32,18 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
+                .logout(logout -> logout.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login/oauth2/**", "/oauth2/**", "/auth/**")
-                        .permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(authorization -> authorization
+                                .authorizationRequestResolver(authorizationRequestResolver()))
                         .successHandler(oAuth2LoginSuccessHandler));
 
         return http.build();
@@ -48,7 +53,7 @@ public class SecurityConfig {
     public OAuth2AuthorizationRequestResolver authorizationRequestResolver() {
         DefaultOAuth2AuthorizationRequestResolver resolver =
                 new DefaultOAuth2AuthorizationRequestResolver(
-                        clientRegistrationRepository,
+                clientRegistrationRepository,
                         "/oauth2/authorization"
                 );
 
