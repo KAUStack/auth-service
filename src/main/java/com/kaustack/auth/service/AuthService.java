@@ -3,8 +3,6 @@ package com.kaustack.auth.service;
 import com.kaustack.auth.exception.ResourceNotFoundException;
 import com.kaustack.auth.exception.UnauthorizedException;
 import com.kaustack.auth.model.User;
-import com.kaustack.auth.dto.request.RefreshTokenRequest;
-import com.kaustack.auth.dto.response.RefreshTokenResponse;
 import com.kaustack.auth.repository.UserRepository;
 
 import org.springframework.stereotype.Service;
@@ -20,9 +18,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
-    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
-        String token = request.refreshToken();
-
+    public String refreshToken(String token) {
         if (token == null || !jwtService.validateRefreshToken(token)) {
             throw new UnauthorizedException("Invalid refresh token");
         }
@@ -31,8 +27,6 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        String newAccessToken = jwtService.generateAccessToken(user);
-
-        return new RefreshTokenResponse(newAccessToken);
+        return jwtService.generateAccessToken(user);
     }
 }
