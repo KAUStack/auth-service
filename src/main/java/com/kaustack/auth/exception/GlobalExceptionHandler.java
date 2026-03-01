@@ -5,9 +5,12 @@ import com.kaustack.auth.dto.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -18,6 +21,56 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public ResponseEntity<ErrorResponse> handleNotFound(
+            Exception ex,
+            HttpServletRequest request) {
+
+        ErrorResponse response = ErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(),
+                "Not Found",
+                "ROUTE_NOT_FOUND",
+                "No route found for " + request.getMethod() + " " + request.getRequestURI(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(
+            HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse response = ErrorResponse.of(
+                HttpStatus.METHOD_NOT_ALLOWED.value(),
+                "Method Not Allowed",
+                "METHOD_NOT_ALLOWED",
+                ex.getMethod() + " is not supported for " + request.getRequestURI(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGeneric(
+            Exception ex,
+            HttpServletRequest request) {
+
+        log.error("Unexpected error: {}", ex.getMessage(), ex);
+
+        ErrorResponse response = ErrorResponse.of(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                "INTERNAL_ERROR",
+                "An unexpected error occurred",
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(

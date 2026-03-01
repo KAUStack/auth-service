@@ -1,8 +1,13 @@
 package com.kaustack.auth.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kaustack.auth.dto.response.ErrorResponse;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -24,6 +29,7 @@ public class SecurityConfig {
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.oauth2.hosted-domain:}")
     private String hostedDomain;
@@ -48,7 +54,32 @@ public class SecurityConfig {
                         .authorizationEndpoint(authorization -> authorization
                                 .authorizationRequestResolver(authorizationRequestResolver()))
                         .successHandler(oAuth2LoginSuccessHandler))
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            ErrorResponse error = ErrorResponse.of(
+                                    HttpStatus.UNAUTHORIZED.value(),
+                                    "Unauthorized",
+                                    "UNAUTHORIZED",
+                                    "Authentication required",
+                                    request.getRequestURI()
+                            );
+                            response.getWriter().write(objectMapper.writeValueAsString(error));
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            ErrorResponse error = ErrorResponse.of(
+                                    HttpStatus.FORBIDDEN.value(),
+                                    "Forbidden",
+                                    "ACCESS_DENIED",
+                                    "Access denied",
+                                    request.getRequestURI()
+                            );
+                            response.getWriter().write(objectMapper.writeValueAsString(error));
+                        }));
 
         return http.build();
     }
