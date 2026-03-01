@@ -36,6 +36,10 @@ public class JwtService {
                 user.getGender().name());
     }
 
+    public boolean validateAccessToken(String token) {
+        return jwtUtils.validateToken(token, TokenType.ACCESS);
+    }
+
     public boolean validateRefreshToken(String token) {
         return jwtUtils.validateToken(token, TokenType.REFRESH);
     }

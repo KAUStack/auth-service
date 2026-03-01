@@ -1,5 +1,6 @@
 package com.kaustack.auth.controller;
 
+import com.kaustack.auth.model.User;
 import com.kaustack.auth.service.AuthService;
 import com.kaustack.jwt.JwtUtils;
 
@@ -50,5 +51,12 @@ public class AuthController {
 
         response.addHeader("Set-Cookie", accessCookie.toString());
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<User> getCurrentUser(
+            @CookieValue(name = "access_token", required = false) String accessToken) {
+        User user = authService.getCurrentUser(accessToken);
+        return ResponseEntity.ok(user);
     }
 }
