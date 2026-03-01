@@ -31,6 +31,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     @Value("${app.oauth2.redirect-uri}")
     private String redirectUri;
 
+    @Value("${app.cookie.domain:}")
+    private String cookieDomain;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException {
@@ -41,21 +44,27 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        ResponseCookie accessCookie = ResponseCookie.from("access_token", accessToken)
+        ResponseCookie.ResponseCookieBuilder accessCookieBuilder = ResponseCookie.from("access_token", accessToken)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Lax")
                 .path("/")
-                .maxAge(jwtUtils.extractMaxAge(accessToken))
-                .build();
+                .maxAge(jwtUtils.extractMaxAge(accessToken));
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            accessCookieBuilder.domain(cookieDomain);
+        }
+        ResponseCookie accessCookie = accessCookieBuilder.build();
 
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", refreshToken)
+        ResponseCookie.ResponseCookieBuilder refreshCookieBuilder = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
                 .path("/auth/refresh")
-                .maxAge(jwtUtils.extractMaxAge(refreshToken))
-                .build();
+                .maxAge(jwtUtils.extractMaxAge(refreshToken));
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            refreshCookieBuilder.domain(cookieDomain);
+        }
+        ResponseCookie refreshCookie = refreshCookieBuilder.build();
 
         response.addHeader("Set-Cookie", accessCookie.toString());
         response.addHeader("Set-Cookie", refreshCookie.toString());
